@@ -1,0 +1,45 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+UI --> Scheduler: start thread
+FloorManager --> Floor: start 5 threads 
+Elelvator --> Elevator: start thread
+Scheduler ->> Scheduler: state = Receiving
+Scheduler ->> Scheduler: getNextPacket()
+Scheduler ->> Connection: receive with timeout
+Scheduler ->> Connection: send acknowledge to sender
+Scheduler ->> Scheduler: nextState(); state = Processing
+Scheduler ->> Scheduler: state = Processing
+Scheduler ->> Scheduler: nextState(); state = Sleeping
+Scheduler ->> Scheduler: state = Processing
+FloorManager --> FloorManager: read events.txt and simulate button presses
+Floor --> Floor:pushButton request elevator to floor
+loop
+Scheduler ->> Scheduler: nextState(); state = Processing
+Scheduler ->> Scheduler: processSending(); Put Request Elevator Message in Elevator Receive Queue
+
+Elevator ->> Elevator: sleep
+Elevator ->> Elevator: nextState(); state = Processing_Receiving
+Scheduler ->> Scheduler: state = Sleeping
+Elevator -> Elevator: checkIfMoveTo()
+Elevator -> Connection: pollMessages(); receive moveTo Request
+Connection -> Scheduler: send UDP packet
+alt Is Move To
+    Elevator ->> Elevator: nextState(); state = Moving
+    Elevator -->> Connection: sendMessage(); send Arrived at floor
+
+else Is Not Move To
+
+end
+Elevator ->> Elevator: nextState(); state = Sleeping
+end
+
+
+Floor --> Floor:checkIfConfirmed receive message that elevator has arrived.
+Floor --> Connection: pollMessages()
+Connection -> Scheduler: Check if it has any messages for this floor.
+
+
+@enduml

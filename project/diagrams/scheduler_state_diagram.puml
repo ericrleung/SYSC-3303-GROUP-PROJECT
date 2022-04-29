@@ -1,0 +1,10 @@
+@startuml
+[*] --> PROCESSING
+PROCESSING --> SLEEPING : time passed
+PROCESSING: do/move queued up send requests\n\tinto the clients receive buffer
+PROCESSING --> [*] : on kill
+
+SLEEPING --> PROCESSING : time passed
+SLEEPING: do/sleep for 1 second
+SLEEPING  --> [*] : on kill
+@enduml

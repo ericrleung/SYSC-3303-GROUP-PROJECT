@@ -1,0 +1,88 @@
+@startuml
+
+class "Application"
+
+class "ArrivedAtFloor" {
+  currentFloor : int
+}
+
+enum "Direction" {
+  UP
+  DOWN
+}
+
+class "Elevator" {
+  currentFloor : int
+  shouldDie : boolean
+  destinationFloor : Integer
+  messageQueue : MessageQueue
+  moving : boolean
+  kill()
+  run()
+}
+
+class "ElevatorArrived" {
+  currentFloor : int
+}
+
+class "Floor" {
+  messageQueue : MessageQueue
+  number : int
+  shouldDie : boolean
+  kill()
+  pushButton(Direction, int)
+  readEvents(String)
+  ready()
+  requestElevator()
+  run()
+}
+
+abstract class "Message" {
+  time : long
+  eventTimeStamp : Date
+}
+
+interface "MessageQueue" {
+  receive(Object) : Message
+  send(Message)
+}
+
+class "MoveTo" {
+  destinationFloor : int
+}
+
+class "ReadyToMove" {
+  currentFloor : int
+}
+
+class "RequestElevator" {
+  currentFloor : int
+}
+
+class "Scheduler" {
+  shouldDie : boolean
+  sendQueue : ConcurrentLinkedDeque<Message>
+  receiveQueue : ConcurrentLinkedDeque<Message>
+  floorStates : ConcurrentHashMap<Integer, Boolean>
+  isFloorReady(int) : boolean
+  kill()
+  receive(Object) : Message
+  run()
+  send(Message)
+}
+
+class "Util"
+
+"Elevator" --o "MessageQueue" : messageQueue
+"Floor" --> "Direction" : use
+"Floor" --> "MessageQueue" : messageQueue
+"Message" <|-- "ArrivedAtFloor"
+"Message" <|-- "ElevatorArrived"
+"Message" <|-- "MoveTo"
+"MessageQueue" --> "Message" : use
+"MessageQueue" <|-- "Scheduler"
+"Message" <|-- "ReadyToMove"
+"Message" <|-- "RequestElevator"
+"Scheduler" "*" --> "*" "Message" : sendQueue/receiveQueue
+
+@enduml

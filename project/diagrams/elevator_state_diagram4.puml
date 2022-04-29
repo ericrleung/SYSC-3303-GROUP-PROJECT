@@ -1,0 +1,33 @@
+@startuml
+[*] --> Working
+
+state Working {
+[*] --> SLEEPING
+SLEEPING: do/sleep for 1 second
+SLEEPING --> PROCESSING_RECEIVE : 1 second elapsed
+MOVING: exit/send arrived message
+
+PROCESSING_RECEIVE --> SLEEPING : finished processing message
+PROCESSING_RECEIVE: entry/check for move to message
+PROCESSING_RECEIVE: do/process message message
+
+MOVING --> MOVING_INTERMEDIATE : Checking Message
+MOVING_INTERMEDIATE --> MOVING : Message in processing
+MOVING_INTERMEDIATE --> DOOR_OPENING : Reached destination
+DOOR_OPENING --> SLEEPING : 1s elapsed
+PROCESSING_RECEIVE --> DOOR_CLOSING : received move to message
+DOOR_CLOSING --> MOVING : 1s elapsed
+
+DOOR_CLOSING -->STUCK_DOOR : Door fault
+DOOR_OPENING -->STUCK_DOOR : Door fault
+STUCK_DOOR: do/sleep for 5 seconds
+
+STUCK_DOOR --> DOOR_CLOSING : Resume Closing
+STUCK_DOOR --> DOOR_OPENING : Resume Opening
+
+}
+
+Working --> STUCK_ELEVATOR : system fault
+
+Working --> [*] : on kill
+@enduml

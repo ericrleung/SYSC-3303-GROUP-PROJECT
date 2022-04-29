@@ -1,0 +1,16 @@
+@startuml
+[*] --> SLEEPING
+SLEEPING: do/sleep for 1 second
+SLEEPING --> PROCESSING_RECEIVE : 1 second elapsed
+PROCESSING_RECEIVE --> MOVING : received move to message
+MOVING: exit/send arrived message
+SLEEPING --> [*] : on kill
+
+MOVING --> SLEEPING : time passed
+MOVING --> [*] : on kill
+
+PROCESSING_RECEIVE --> SLEEPING : finished processing message
+PROCESSING_RECEIVE: entry/check for move to message
+PROCESSING_RECEIVE: do/process message message
+PROCESSING_RECEIVE --> [*] : on kill
+@enduml

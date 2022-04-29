@@ -1,0 +1,170 @@
+@startuml
+interface "Runnable"
+
+
+class "ArrivedAtFloor" {
+  + currentFloor : int
+  + ArrivedAtFloor(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+enum "Direction" {
+  UP
+  DOWN
+  + {static} toDirection(dir : String) : Direction
+}
+
+class "Elevator" {
+  - currentFlooor : int
+  - shouldDie : boolean
+  - destinationFloor : Integer
+  - shouldMove : boolean
+  - receiveEventTimeStamp : Date
+  - messageQueue : MessageQueue
+  - state : ElevatorState
+  + Elevator (messageQueue : MessageQueue)
+  - checkIfMoveTo()
+  + isMoving() : boolean
+  + getCurrentFloor() : int
+  - setState(state : ElevatorState)
+  + run()
+  - nextState()
+  + kill()
+}
+
+enum "ElevatorState" {
+  IDLE
+  MOVING
+  PROCESSING_RECEIVE
+}
+
+class "ElevatorArrived" {
+  + currentFloor : int
+  + ElevatorArrived(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "Floor" {
+  - messageQueue : MessageQueue
+  - number : int
+  - shouldDie : boolean
+  + Floor (messageQueue : MessageQueue, number : int)
+  + pushButton(direction : Direction, floorNumber : int)
+  + ready()
+  + requestElevator()
+  + readEvents(inputText : String)
+  - checkIfConfirmed()
+  + run()
+  + kill()
+}
+
+abstract class "Message" {
+  + time : long
+  + eventTimeStamp : Date
+  + Message(eventTimeStamp : Date)
+  + toString() : String
+}
+
+interface "MessageQueue" {
+  + send(message : Message)
+  + receive(object : Object)
+}
+
+class "MoveTo" {
+  + destinationFloor : int
+  + MoveTo(destinationFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "RequestElevator" {
+  + currentFloor : int
+  + RequestElevator(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "Ready" {
+  + currentFloor : int
+  + Ready(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "Scheduler" {
+  - shouldDie : boolean
+  - state : SchedulerState
+  - sendQueue : ConcurrentLinkedDeque<Message>
+  - receiveQueue : ConcurrentLinkedDeque<Message>
+  - floorStates : ConcurrentHashMap<Integer, Boolean>
+  + Scheduler()
+  - floorIsReady(floorNumber : int)
+  + isFloorReady(floorNumber : int) : boolean
+  - processSending()
+  + run()
+  - nextState()
+  + send(message : Message)
+  + receive(object : Object) : Message
+  + isFree() : boolean
+  + kill()
+  + getState() : SchedulerState
+}
+
+enum "SchedulerState" {
+  PROCESSING
+  SLEEPING
+}
+
+class Util {
+ {static} + DEBUG : boolean
+ {static} + LOG : boolean
+ {static} + ERROR : boolean
+ {static} + getThreadName() : String
+ {static} + getThread() : String
+ {static} + dateToString(date : Date) : String
+ {static} + log(msg : String)
+ {static} + debug(msg : String)
+ {static} + getTime() : String
+ {static} + info(msg : String)
+ {static} + error(msg : String)
+}
+
+class UI {
+        - scheduler:Scheduler 
+	- elevator : Elevator
+	- floor : Floor 
+	- eventsList : JComboBox 
+	- console : JTextArea 
+	- elevatorThread :Thread  
+	- schedulerThread :Thread  
+	- floorThread :Thread  
+        {static} + main(args[] : String)
+        + UI()
+- createMenu(frame : JFrame)
+- createComboBox(frame : JFrame)
+- redefinePrintStream()
+- selectFile()
+- killThreads()
+- resetProgram()
+}
+
+class ConsoleOutputStream{
+  - textArea : JTextArea
+  + ConsoleOutputStream(textArea : JTextArea)
+  + write(b : int)
+}
+
+
+"Elevator" ..|> Runnable
+"Floor" ..|> Runnable
+"Scheduler" ..|> Runnable
+"Floor" --> "Direction" : use
+"Scheduler" --> "SchedulerState" : use
+"Elevator" --> "ElevatorState" : use
+"Message" <|-- "ArrivedAtFloor"
+"Message" <|-- "ElevatorArrived"
+"Message" <|-- "MoveTo"
+"MessageQueue" <|.. "Scheduler"
+"Message" <|-- "Ready"
+"Message" <|-- "RequestElevator"
+"MessageQueue" <-- "Floor" : requests/responses
+"MessageQueue" <-- "Elevator" : requests/responses
+"ConsoleOutputStream" <-- "UI" : redirects print stream
+@enduml

@@ -1,0 +1,278 @@
+@startuml
+interface "Runnable"
+
+
+
+class "Connection" {
+  + {static} TIMEOUT: int = 2000 {readOnly}
+  - port: int
+  - socket: DatagramSocket
+  - hostAddr: String
+  - addr: InetAddress;
+  - replyingPort: int
+  - SIGNATURE_SIZE: int {readOnly}
+  - lastMsgLength: int
+  + Connection(hostAddr: String, hostPort: int)
+  + Connection(bindedPort: int)
+  + init()
+  - getPacket(data: byte[]): DatagramPacket
+  - getPacket(data: byte[], port: int): DatagramPacket
+  - receive(): DatagramPacket
+  - genericSend(data: byte[], port: int)
+  - sendWithoutResponse(data: byte[])
+  + acknowledge(signature: byte[], m: Message)
+  + acknowledge(signature: byte[])
+  - tryReceive(): DatagramPacket
+  + check(): DatagramPacket
+  - send(signature: byte[], data: byte[]): DatgramPacket
+  - isResponse(signature: byte[], data: byte[]): boolean
+  - signData(message: byte[]): byte[]
+  - serializeMessage(message: Message): byte[]
+  + deserializeMessage(toDeserialize: byte[]): Message
+  + pollMessages(c: Class, number: int): Message
+  + sendMessage(send: Message)
+  + register(c: Class): int
+  + getSignature(data: byte[]): byte[]
+  + getMessageBinary(data: byte[]): byte[]
+  + close()
+  + isEmpty(data: byte[]): boolean
+}
+
+enum "Direction" {
+  UP
+  DOWN
+  + {static} toDirection(dir : String) : Direction
+  + {static} toBool(dir : Direction) : boolean
+}
+
+class "Elevator" {
+  + {static} ELEVATOR_BUTTON_LAMPS: int = 22 {readOnly}
+  - currentFlooor : int
+  - shouldDie : boolean
+  - destinationFloor : Integer
+  - shouldMove : boolean
+  - receiveEventTimeStamp : Date
+  - state : ElevatorState
+  - lamps: boolean[]
+  - con: Connection
+  # elevatorId: int
+  - isStuck : boolean
+  - doorStuck : boolean
+  - previousState : ElevatorState
+  - passengers : List<Passenger>
+  + Elevator (port: int)
+  - checkIfMoveTo()
+  + carButtonPress(requestedFloor : int)
+  + isMoving() : boolean
+  + getCurrentFloor() : int
+  - setState(state : ElevatorState)
+  - ready()
+  + run()
+  - nextState()
+  + setStuck(stuck : boolean)
+  + setDoorStuck(stuck : boolean)
+  + kill()
+  + {static} main(args: String[])
+}
+
+enum "ElevatorState" {
+  SLEEPING
+  MOVING
+  PROCESSING_RECEIVE
+  CLOSING_DOOR
+  OPENING_DOOR
+  MOVING_INTERMEDIATE
+  STUCK_DOOR
+  STUCK_ELEVATOR
+}
+
+class "ElevatorInfo" {
+  + {static} MAX_PASSENGERS : int
+  + elevatorId: int
+  + elevatorFloor: int
+  - infoContents: List<ElevatorInfoContent>
+  + ElevatorInfo(elevatorId: int, elevatorFloor: int)
+  + addDestination(destinationFloor)
+  + removeDestinationIfArrives(currentFloor: int): boolean
+  - computeDirection() : Direction
+  + computeNextDestination() : ElevatorInfoContent
+  + isFree(): boolean
+}
+
+class "Floor" {
+  - messageQueue : MessageQueue
+  - shouldDie : boolean
+  - downLamp: boolean
+  - upLamp: boolean
+  - con: Connection
+  # setup_num: int
+  - eventTimeStamp: Date
+  - direction: Direction
+  - passenger: Passenger
+  + Floor (port: int)
+  + pushButton(direction : Direction, eventTimeStamp: Date)
+  + simulatedPress(direction: Direction, eventTimeStamp: Date)
+  - checkButtonPress()
+  + ready()
+  + requestElevator()
+  + getNum(): int
+  - checkIfConfirmed()
+  + run()
+  + kill()
+  + {static} main(args: String[])
+}
+
+class "FloorManager" {
+  - floors: Arraylist<Floor>
+  - connection: Connection
+  - passengerCount: int
+  + FloorManager()
+  + createFloorThread()
+  + readEvents(inputText: String)
+  + receiving()
+  - processReadyMessage(message: Message, sign: byte[])
+  + main(args: String[])
+  + run()
+}
+
+class "Passenger" {
+ - carButtonNum: int
+ - faultNum: int
+ - floorButtonNum: int
+ - onElevator: boolean
+ - id: int
+ + Passenger(bNum: int, fNum: int, fBNum, onElevator: boolean, id:int)
+ + getCarButtonNum(): int
+ + getFaultNum(): int
+ + getFloorButtonNum(): int
+ + getOnElevator(): boolean
+ + setOnElevator(onElevator: boolean)
+ + setFaultNum(num: int)
+ + getId()
+}
+
+enum "MessageCreator" {
+  ELEVATOR
+  FLOOR
+}
+
+
+interface "MessageQueue" {
+  + send(message : Message)
+  + receive(object : Object): Message
+}
+
+
+class "Scheduler" {
+  - {static} DEFAULT_MAIN_FLOOR: int = 1 {readOnly}
+  - shouldDie : boolean
+  - state : SchedulerState
+  - signatures: ArrayList<byte[]>
+  - con: Connection
+  - floorCounter: int
+  - elevatorCounter: int
+  - floorMessages: ArrayList<ConcurrentLinkedDeque<Message>>
+  - elevatorMessages: ArrayList<ConcurrentLinkedDeque<Message>>
+  - receiveQueue: ConcurrentLinkedDeque<Message> receiveQueue;
+  - elevators: Map<Integer, ElevatorInfo>
+  + Scheduler(port: int)
+  + run()
+  - getNextPacket()
+  - nextState()
+  + selectElevator(): int
+  + processing()
+  - moveElevatorToNextDestination( selectedElevator :int)
+  - getNextElevatorId: int
+  - processReadyMessage(message: Message, sign: byte[]
+  - pollLogic(m: Poll, sign: byte[])
+  + isFree(): boolean
+  + kill()
+  + getState(): SchedulerState
+  + {static} main(args: String[])
+}
+
+enum "SchedulerState" {
+  PROCESSING
+  RECEIVING
+  SLEEPING
+}
+
+
+class Util {
+ {static} + DEBUG : boolean
+ {static} + LOG : boolean
+ {static} + ERROR : boolean
+ {static} + getThreadName() : String
+ {static} + getThread() : String
+ {static} + dateToString(date : Date) : String
+ {static} + log(msg : String)
+ {static} + debug(msg : String)
+ {static} + getTime() : String
+ {static} + info(msg : String)
+ {static} + error(msg : String)
+}
+
+class "UI_Messenger" {
+  - connection: Connection
+  - shouldDie: boolean
+  ~ fileToSend: String
+  ~ fileSet: boolean
+  + UI_Messenger(port: int)
+  + run()
+  + checkFileToSend()
+  + setFileToSend(fileToSend: String)
+  + kill()
+}
+
+class UI {
+        - scheduler:Scheduler 
+	- eventsList : JComboBox 
+	- console : JTextArea 
+	- schedulerThread :Thread  
+        - messenger : UI_Messenger
+        - elevatorPlaceholder : JPanel
+        - floorPlaceholder: JPanel
+        {static} + main(args[] : String)
+        + UI()
+	- createJPanel(frame : JFrame, jsp: JScrollPane)
+	+ addFloorUI(floorId: int)
+	+ updateFloorButton(floorNumber: int, status: boolean, button: boolean)
+	+ addElevatorUI(elevatorId: int)
+	+ updateElevatorFloor(elevatorId: int, newFloor: int)
+	+ updateElevatorCarButton(elevatorId: int, carButton: int)
+	+ faultElevator(faultType: int, elevatorId: int)
+- createMenu(frame : JFrame)
+- createComboBox(frame : JFrame)
+- redefinePrintStream()
+- selectFile()
+- killThreads()
+- resetProgram()
+}
+
+class ConsoleOutputStream{
+  - textArea : JTextArea
+  + ConsoleOutputStream(textArea : JTextArea)
+  + write(b : int)
+}
+
+
+"Elevator" ..|> Runnable
+"Floor" ..|> Runnable
+"Scheduler" ..|> Runnable
+"Floor" --> "Direction" : use
+"Scheduler" --> "SchedulerState" : use
+"Elevator" --> "ElevatorState" : use
+"MessageQueue" <|.. "Scheduler"
+"MessageQueue" <-- "Floor" : requests/responses
+"MessageQueue" <-- "Elevator" : requests/responses
+"ConsoleOutputStream" <-- "UI" : redirects print stream
+"Floor" --> "Connection" : use
+"Scheduler" --> "Connection" : use
+"Elevator" --> "Connection" : use
+"FloorManager" o-- "Floor"
+"Scheduler" o-- "ElevatorInfo"
+"Elevator" --> "MessageCreator" : use
+"Floor" --> "MessageCreator" : use
+"Scheduler" --> "Poll" : use
+"UI" --> "UI_Messenger" : creates
+@enduml

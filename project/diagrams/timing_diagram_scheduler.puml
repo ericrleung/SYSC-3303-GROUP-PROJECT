@@ -1,0 +1,39 @@
+@startuml
+robust "Elevator" as EL
+robust "Scheduler" as SC
+robust "Floor" as FL
+
+@0
+EL is Stopped
+SC is Waiting
+FL is Waiting
+@100
+SC is Processing
+FL is RequestElevator
+@150
+EL is Moving
+SC is Waiting
+@250
+EL is Stopped
+SC is Processing
+FL is RequestElevator
+@300
+SC is Waiting
+FL is Waiting
+@400
+SC is Processing
+FL is RequestElevator
+@450
+EL is Type1Fault
+SC is Waiting
+@500
+EL is Moving
+@550
+EL is Stopped
+SC is Processing
+@600
+FL is Waiting
+SC is Waiting
+@650
+SC is Waiting
+@enduml

@@ -1,0 +1,118 @@
+@startuml
+
+
+class "ArrivedAtFloor" {
+  + currentFloor : int {readOnly}
+  + elevatorId: int {readOnly}
+  + passenger : Passenger
+  + ArrivedAtFloor(currentFloor : int, eventTimeStamp : Date, elevatorId: int)
+  + toString() : String
+}
+
+class "ElevatorArrived" {
+  + currentFloor : int {readOnly}
+  + ElevatorArrived(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+
+
+abstract class "Message" {
+  + time : long {readOnly}
+  + eventTimeStamp : Date {readOnly}
+  + Message(eventTimeStamp : Date)
+  + toString() : String
+}
+
+
+class "MoveTo" {
+  + destinationFloor : int {readOnly}
+  + passenger: Passenger
+  + MoveTo(destinationFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "Poll" {
+  + isElevator: boolean {readOnly}
+  + number: int {readOnly}
+  + Poll(eventTimeStamp: Date, c: MessageCreator, number: int)
+}
+
+class "RequestElevator" {
+  + currentFloor : int {readOnly}
+  + passenger : Passenger
+  + direction : boolean
+  + RequestElevator(currentFloor : int, eventTimeStamp : Date)
+  + toString() : String
+}
+
+class "Ready" {
+  + sentByElevator: boolean {readOnly}
+  + Ready(c: MessageCreator, eventTimeStamp: Date)
+}
+
+class "RequestCarButton" {
+  + requestedFloor : int {readOnly}
+  + elevatorId : int {readOnly}
+  + RequestCarButton(requestedFloor : int, eventTimeStamp : Date, elevatorId : int)
+  + toString() : String
+}
+
+class "RequestElevator" {
+  + currentFloor : int {readOnly}
+  + passenger : Passenger {readOnly}
+  + direction : boolean {readOnly}
+  + RequestCarButton(currentFloor : int, eventTimeStamp : Date, direction : boolean)
+  + toString() : String
+}
+
+class "ElevatorDoorsStuck" {
+  + currentFloor : int {readOnly}
+  + elevatorId: int {readOnly}
+  + passenger : Passenger
+  + ElevatorDoorsStuck(currentFloor : int, eventTimeStamp : Date, elevatorId: int)
+  + toString() : String
+}
+
+class "ElevatorStuck" {
+  + currentFloor : int {readOnly}
+  + elevatorId: int {readOnly}
+  + ElevatorStuck(currentFloor : int, eventTimeStamp : Date, elevatorId: int)
+  + toString() : String
+}
+
+class "ReadFile" {
+  + eventsFile: String {readOnly}
+  + ReadFile(eventTimeStamp: Date, eventsFile: String)
+
+}
+
+class "EditElevatorTimes" {
+  + moveTime: int {readOnly}
+  + doorTime: int {readOnly}
+  + EditElevatorTimes(eventTimeStamp: Date, moveTime: int, doorTime: int)
+
+}
+
+
+
+class "Setup" {
+  + number: int {readOnly}
+  + Setup(eventTimeStamp: Date, number: int)
+}
+
+"Message" <|-- "ArrivedAtFloor"
+"Message" <|-- "ElevatorArrived"
+"Message" <|-- "MoveTo"
+"Message" <|-- "Ready"
+"Message" <|-- "RequestElevator"
+"Message" <|-- "RequestCarButton"
+"Message" <|-- "Poll"
+"Message" <|-- "ElevatorStuck"
+"ReadFile" --|> "Message"
+"ElevatorStuck" --|> "Message"
+"ElevatorDoorsStuck" --|> "Message"
+"EditElevatorTimes" --|> "Message"
+
+"Message" <|-- "Setup"
+@enduml
